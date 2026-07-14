@@ -20,7 +20,7 @@
 // ---- SETTINGS you can tweak ------------------------------------------------
 var GAMMA          = 0.99;   // the middle Levels value (1.00 -> 0.99)
 var JPEG_QUALITY   = 12;     // 0-12, only used when saving JPEGs
-var INCLUDE_SUBFOLDERS = false;
+var INCLUDE_SUBFOLDERS = true;
 // Matches normal image extensions AND files whose name ends in "_z"
 // (extensionless files exported that way). "_z" files are saved out as .jpg.
 var FILE_TYPES = /(\.(jpg|jpeg|png|tif|tiff|psd)$|_z$)/i;
@@ -103,6 +103,13 @@ function openImage(file) {
     return doc;
 }
 
+function ensureFolder(folder) {
+    // Creates a folder and any missing parent folders above it.
+    if (folder.exists) return;
+    ensureFolder(folder.parent);
+    folder.create();
+}
+
 function main() {
     var inputFolder = Folder.selectDialog("Select the folder of photos to process");
     if (!inputFolder) return;
@@ -119,12 +126,19 @@ function main() {
     var originalDialogMode = app.displayDialogs;
     app.displayDialogs = DialogModes.NO;
 
+    var rootPath = inputFolder.fsName;
     var processed = 0, failed = 0;
     for (var i = 0; i < files.length; i++) {
         try {
+            // Mirror the source subfolder structure under processed/ so that
+            // same-named files in different subfolders never overwrite each other.
+            var relDir = files[i].parent.fsName.substring(rootPath.length);
+            var destFolder = new Folder(outFolder.fsName + relDir);
+            ensureFolder(destFolder);
+
             var doc = openImage(files[i]);
             applyLevelsGamma(GAMMA);
-            saveResult(doc, files[i], outFolder);
+            saveResult(doc, files[i], destFolder);
             doc.close(SaveOptions.DONOTSAVECHANGES);
             processed++;
         } catch (e) {
