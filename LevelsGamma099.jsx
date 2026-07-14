@@ -19,9 +19,9 @@
 
 // ---- SETTINGS you can tweak ------------------------------------------------
 var GAMMA          = 0.99;   // the middle Levels value (1.00 -> 0.99)
-var JPEG_QUALITY   = 12;     // 0-12, only used when saving JPEGs
 var INCLUDE_SUBFOLDERS = true;
 // Only process JPEG files; everything else (e.g. "_z" PNG files) is ignored.
+// All outputs are saved as .png regardless of input format.
 var FILE_TYPES = /\.jpe?g$/i;
 // ---------------------------------------------------------------------------
 
@@ -64,27 +64,11 @@ function collectFiles(folder, recurse) {
 }
 
 function saveResult(doc, srcFile, outFolder) {
+    // Always save as PNG (strip original extension, e.g. photo.jpg -> photo.png).
     var base = srcFile.name.replace(/\.[^\.]+$/, "");
-    var ext  = srcFile.name.match(/\.[^\.]+$/);
-    // Extensionless files (e.g. "..._z") are PNG data -> save as .png
-    ext = ext ? ext[0].toLowerCase() : ".png";
-
-    var outFile = new File(outFolder + "/" + base + ext);
-
-    if (ext === ".png") {
-        var pngOpts = new PNGSaveOptions();
-        doc.saveAs(outFile, pngOpts, true, Extension.LOWERCASE);
-    } else if (ext === ".tif" || ext === ".tiff") {
-        var tiffOpts = new TiffSaveOptions();
-        doc.saveAs(outFile, tiffOpts, true, Extension.LOWERCASE);
-    } else if (ext === ".psd") {
-        var psdOpts = new PhotoshopSaveOptions();
-        doc.saveAs(outFile, psdOpts, true, Extension.LOWERCASE);
-    } else {
-        var jpgOpts = new JPEGSaveOptions();
-        jpgOpts.quality = JPEG_QUALITY;
-        doc.saveAs(outFile, jpgOpts, true, Extension.LOWERCASE);
-    }
+    var outFile = new File(outFolder + "/" + base + ".png");
+    var pngOpts = new PNGSaveOptions();
+    doc.saveAs(outFile, pngOpts, true, Extension.LOWERCASE);
 }
 
 function openImage(file) {
