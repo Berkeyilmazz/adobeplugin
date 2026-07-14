@@ -17,5 +17,11 @@ from the default `1.00` to **`0.99`**.
 ## Settings (top of the script)
 - `GAMMA = 0.99` — the middle Levels value.
 - `JPEG_QUALITY = 12` — re-save quality for JPEGs (0–12).
-- `INCLUDE_SUBFOLDERS = false` — set `true` to recurse.
-- `FILE_TYPES` — supported extensions (jpg, png, tif, psd).
+- `INCLUDE_SUBFOLDERS = true` — recurse into subfolders (skips the `processed/` output folder).
+- `FILE_TYPES` — matches normal image extensions (jpg, png, tif, psd) and extensionless files ending in `_z`.
+
+## Behaviour
+- Originals are never overwritten — output goes to a `processed/` subfolder.
+- Subfolder structure is mirrored under `processed/` so same-named files in different folders do not collide.
+- Extensionless `_z` files (PNG data) are opened via a temp copy and saved as `.png`.
+- Hidden/system files (e.g. `.DS_Store`) are skipped.
