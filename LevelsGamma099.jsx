@@ -21,9 +21,8 @@
 var GAMMA          = 0.99;   // the middle Levels value (1.00 -> 0.99)
 var JPEG_QUALITY   = 12;     // 0-12, only used when saving JPEGs
 var INCLUDE_SUBFOLDERS = true;
-// Matches normal image extensions AND files whose name ends in "_z"
-// (extensionless files exported that way). "_z" files are saved out as .jpg.
-var FILE_TYPES = /(\.(jpg|jpeg|png|tif|tiff|psd)$|_z$)/i;
+// Only process JPEG files; everything else (e.g. "_z" PNG files) is ignored.
+var FILE_TYPES = /\.jpe?g$/i;
 // ---------------------------------------------------------------------------
 
 function applyLevelsGamma(gamma) {
