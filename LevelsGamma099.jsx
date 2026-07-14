@@ -67,7 +67,8 @@ function collectFiles(folder, recurse) {
 function saveResult(doc, srcFile, outFolder) {
     var base = srcFile.name.replace(/\.[^\.]+$/, "");
     var ext  = srcFile.name.match(/\.[^\.]+$/);
-    ext = ext ? ext[0].toLowerCase() : ".jpg";
+    // Extensionless files (e.g. "..._z") are PNG data -> save as .png
+    ext = ext ? ext[0].toLowerCase() : ".png";
 
     var outFile = new File(outFolder + "/" + base + ext);
 
@@ -92,10 +93,10 @@ function openImage(file) {
     if (/\.(jpg|jpeg|png|tif|tiff|psd)$/i.test(file.name)) {
         return app.open(file);
     }
-    // Extensionless files (e.g. "..._z"): copy to a temp file ending in .jpg
-    // so Photoshop can determine the format (these exports are JPEG data).
+    // Extensionless files (e.g. "..._z"): copy to a temp file ending in .png
+    // so Photoshop can determine the format (these exports are PNG data).
     var tmp = new File(Folder.temp + "/psbatch_" + (new Date()).getTime() +
-                       "_" + file.name + ".jpg");
+                       "_" + file.name + ".png");
     file.copy(tmp);
     var doc = app.open(tmp);
     tmp.remove(); // safe: the document is already loaded in memory
