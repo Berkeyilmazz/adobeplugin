@@ -21,7 +21,9 @@
 var GAMMA          = 0.99;   // the middle Levels value (1.00 -> 0.99)
 var JPEG_QUALITY   = 12;     // 0-12, only used when saving JPEGs
 var INCLUDE_SUBFOLDERS = false;
-var FILE_TYPES = /\.(jpg|jpeg|png|tif|tiff|psd)$/i;
+// Matches normal image extensions AND files whose name ends in "_z"
+// (extensionless files exported that way). "_z" files are saved out as .jpg.
+var FILE_TYPES = /(\.(jpg|jpeg|png|tif|tiff|psd)$|_z$)/i;
 // ---------------------------------------------------------------------------
 
 function applyLevelsGamma(gamma) {
@@ -50,8 +52,12 @@ function collectFiles(folder, recurse) {
     for (var i = 0; i < items.length; i++) {
         var item = items[i];
         if (item instanceof Folder) {
-            if (recurse) out = out.concat(collectFiles(item, recurse));
-        } else if (FILE_TYPES.test(item.name)) {
+            // never descend into our own output folder
+            if (recurse && item.name !== "processed") {
+                out = out.concat(collectFiles(item, recurse));
+            }
+        } else if (item.name.charAt(0) !== "." && FILE_TYPES.test(item.name)) {
+            // skip hidden/system files (.DS_Store, ._resource forks, etc.)
             out.push(item);
         }
     }
@@ -81,6 +87,21 @@ function saveResult(doc, srcFile, outFolder) {
     }
 }
 
+function openImage(file) {
+    // Files with a normal image extension open directly.
+    if (/\.(jpg|jpeg|png|tif|tiff|psd)$/i.test(file.name)) {
+        return app.open(file);
+    }
+    // Extensionless files (e.g. "..._z"): copy to a temp file ending in .jpg
+    // so Photoshop can determine the format (these exports are JPEG data).
+    var tmp = new File(Folder.temp + "/psbatch_" + (new Date()).getTime() +
+                       "_" + file.name + ".jpg");
+    file.copy(tmp);
+    var doc = app.open(tmp);
+    tmp.remove(); // safe: the document is already loaded in memory
+    return doc;
+}
+
 function main() {
     var inputFolder = Folder.selectDialog("Select the folder of photos to process");
     if (!inputFolder) return;
@@ -100,7 +121,7 @@ function main() {
     var processed = 0, failed = 0;
     for (var i = 0; i < files.length; i++) {
         try {
-            var doc = app.open(files[i]);
+            var doc = openImage(files[i]);
             applyLevelsGamma(GAMMA);
             saveResult(doc, files[i], outFolder);
             doc.close(SaveOptions.DONOTSAVECHANGES);
