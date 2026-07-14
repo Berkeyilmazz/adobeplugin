@@ -128,6 +128,7 @@ function main() {
 
     var rootPath = inputFolder.fsName;
     var processed = 0, failed = 0;
+    var firstError = "";
     for (var i = 0; i < files.length; i++) {
         try {
             // Mirror the source subfolder structure under processed/ so that
@@ -143,12 +144,24 @@ function main() {
             processed++;
         } catch (e) {
             failed++;
+            if (firstError === "") {
+                firstError = "First error on '" + files[i].name + "':\n" + e;
+            }
         }
     }
 
     app.displayDialogs = originalDialogMode;
-    alert("Done.\nProcessed: " + processed + "\nFailed: " + failed +
-          "\nSaved to: " + outFolder.fsName);
+    var msg = "Done.\nFiles found: " + files.length +
+              "\nProcessed OK: " + processed +
+              "\nFailed: " + failed +
+              "\nSaved to: " + outFolder.fsName;
+    if (firstError !== "") msg += "\n\n" + firstError;
+    alert(msg);
 }
 
-main();
+// Top-level catch so any error is shown instead of failing silently.
+try {
+    main();
+} catch (e) {
+    alert("Script stopped with an error:\n" + e + "\n(line " + e.line + ")");
+}
